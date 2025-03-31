@@ -12,7 +12,7 @@ Additionally, ReAL utilizes a modified version of pyserini called `weightedsearc
 
 - **weightedsearcher.py**: A modified version of pyserini’s `SimpleSearcher` for performing weighted retrieval.
 - **weight_optimization_rank_and_contrast.py**: Implements the token weight optimization algorithm.
-- **classifier_* modules**: Use different classifiers for relevance judgment and document classification.
+- **classifier_\* modules**: Use different classifiers for relevance judgment and document classification.
 
 The retrieval process with ReAL is executed using `weighted_update_search.py`, which integrates the `weightedsearcher` package to apply the Recall-Oriented Adaptive Learning (ReAL) method.
 
