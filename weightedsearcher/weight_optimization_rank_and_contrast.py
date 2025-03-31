@@ -9,8 +9,8 @@ class DistributionForUpdate:
         self.doc_list = doc_list
         self.lr = lr
         self.max_iterations = max_iterations
-        self.top_num = top_num  # 超参数，前后文档数量
-        self.min_weight = min_weight  # 最小权重值
+        self.top_num = top_num 
+        self.min_weight = min_weight 
         self.bottom_num = bottom_num 
         self.alpha = alpha
         self.mask = mask
@@ -41,7 +41,6 @@ class DistributionForUpdate:
     def scale_weights(self, scale_factor):
         for param in self.weight_vec.values():
             param.data = (param.data * scale_factor + 1) / 2
-            # param.data = param.data * scale_factor
     
     def contrast_loss(self, top_scores, bottom_scores):
         if self.tau is None:
@@ -116,20 +115,15 @@ class DistributionForUpdate:
     import torch
 
     def pairwise_cross_entropy_loss_gpu(self, input_dist, target_dist, use_rank=True, device='cuda:1'):
-        # 将 input_dist 和 target_dist 移到 GPU
         input_dist = input_dist.to(device)
         target_dist = target_dist.to(device)
         
         n = len(target_dist)
         
         if use_rank:
-            # 计算输入分布的差异
             input_diff = input_dist.unsqueeze(1) - input_dist.unsqueeze(0)
-            
-            # 创建掩码，保持上三角部分
             mask = torch.triu(torch.ones(n, n, device=device), diagonal=1)
             
-            # 如果 self.mask 存在
             mask[self.mask:] = 0
             masked_diff = input_diff[mask.bool()]
         else:
@@ -138,8 +132,6 @@ class DistributionForUpdate:
             masked_diff = input_diff[mask.bool()]
         
         target_diff = mask[mask.bool()]
-        
-        # 计算二元交叉熵损失
         loss = F.binary_cross_entropy_with_logits(masked_diff, target_diff, reduction='sum')
         if mask.sum() == 0:
             return torch.tensor(0.0, device=device)
