@@ -20,7 +20,7 @@ For evaluating retrieval performance, we use the `wepyserini` package to calcula
 
 ## Reader
 
-ReAL integrates with an extractive reader based on the FiD (Fusion-in-Decoder) model, which is effective for answer extraction in ODQA systems. To use the FiD reader, first download the relevant files from the [FiD GitHub repository](https://github.com/facebookresearch/FiD) and place them in the `fid_reader` directory. You can then trigger the answer extraction process using the `eval_update.sh` script.
+ReAL integrates with an extractive reader based on the FiD (Fusion-in-Decoder) model, which is effective for answer extraction in ODQA systems. To use the FiD reader, first download the relevant files from the [FiD GitHub repository](https://github.com/facebookresearch/FiD) and place them in the `reader` directory. You can then trigger the answer extraction process using the `eval_update.sh` script.
 
 The reader expects data in the following format, where each entry is a dictionary containing:
   - `id`: An optional identifier for the example.
