@@ -7,29 +7,26 @@ from retriever_utils import load_passages, validate, save_results
 import os
 import pickle
 import csv
-import time 
 
-os.environ["PYSERINI_CACHE"] = "/data/cxr/cxrmain/proj_FindBestQuery/bm25_cache"
+os.environ["PYSERINI_CACHE"] = "bm25_cache/"
 
-# def setup_logger(log_path):
-#     logger = logging.getLogger(__name__)
-#     logger.setLevel(logging.INFO)
+def setup_logger(log_path):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
-#     # 输出到文件的 handler
-#     file_handler = logging.FileHandler(log_path)
-#     file_handler.setLevel(logging.INFO)
-#     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-#     file_handler.setFormatter(file_formatter)
-#     logger.addHandler(file_handler)
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setLevel(logging.INFO)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
 
-#     # 输出到控制台的 handler
-#     console_handler = logging.StreamHandler()
-#     console_handler.setLevel(logging.INFO)
-#     console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-#     console_handler.setFormatter(console_formatter)
-#     logger.addHandler(console_handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
 
-#     return logger
+    return logger
 
 def save_data_with_pickle(data, file_path):
     with open(file_path, 'wb') as f:
@@ -79,36 +76,24 @@ class SparseRetriever:
         return results
 
 
-
-# %%
 if __name__ == "__main__":
     
     ####  主要运行参数
-    log_path = '/data/cxr/cxrmain/proj_QE/log/search_time.log'
-    top_docs_pkl_path = '/data/cxr/cxrmain/proj_QE/temp_pkl/compare/output20240514simple_pyserini'
-    
-    input_file_path = '/data/cxr/cxrmain/proj_FindBestQuery/data/downloads/data/retriever/qas/nq-dev-500.csv'
-    qe_file_path = '/data/cxr/cxrmain/proj_QE/QE_generation/20240505/nq-dev-mistral-time-50len2.txt'
+    log_path = 'log/record.log'
+    top_docs_pkl_path = ''
+    input_file_path = ''
+    qe_file_path = ''
     with open(input_file_path, 'r') as q_file, open(qe_file_path, 'r') as qe_file:
-        query_data = csv.reader(q_file, delimiter='\t') ## 不加quoting= csv.QUOTE_NONE是避免带引号的answer未处理
-        qe_data = csv.reader(qe_file, delimiter='\t' , quoting= csv.QUOTE_NONE) ## 加quoting= csv.QUOTE_NONE是避免生成的qe有特殊引号，导致解析处理错误
-        # questions, question_answers = zip(*[(query[0]+" "+" ".join(eval(query[1])), eval(query[1])) for query in query_data])  ## answer as short qe
-        # questions, question_answers = zip(*[(query[0]+" "+ qe[1], eval(query[1])) for query, qe in zip(query_data, qe_data)])  ## long qe
-        questions, question_answers = zip(*[(query[0], eval(query[1])) for query, qe in zip(query_data, qe_data)])  ## no qe
-        # questions = questions[3314:]
-        # question_answers = question_answers[3314:]
+        query_data = csv.reader(q_file, delimiter='\t') 
+        qe_data = csv.reader(qe_file, delimiter='\t' , quoting= csv.QUOTE_NONE)
+        questions, question_answers = zip(*[(query[0]+" "+ qe[1], eval(query[1])) for query, qe in zip(query_data, qe_data)]) 
+        questions, question_answers = zip(*[(query[0], eval(query[1])) for query, qe in zip(query_data, qe_data)])  
+
         
     print(questions)
 
     index_name = "wikipedia-dpr"  
     retriever = SparseRetriever(index_name,log_path)
-    
-    start_time = time.time()
     top_docs_list = retriever.get_top_docs(questions)
-    end_time = time.time()
-    search_time = (end_time-start_time) / 500
-    print(f"search_time: {search_time}")
-
-# # %%
-#     os.makedirs(top_docs_pkl_path, exist_ok=True)
-#     save_data_with_pickle(top_docs_list, os.path.join(top_docs_pkl_path,'top_docs_1it_stable.pkl'))
+    os.makedirs(top_docs_pkl_path, exist_ok=True)
+    save_data_with_pickle(top_docs_list, os.path.join(top_docs_pkl_path,'top_docs_1it_stable.pkl'))
