@@ -11,18 +11,15 @@ def setup_logger(log_path):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
-    # 清除现有的 handler，以避免重复添加
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    # 创建一个输出到文件的 handler
     file_handler = logging.FileHandler(log_path)
     file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
-    # 创建一个输出到控制台的 handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -32,7 +29,6 @@ def setup_logger(log_path):
     return logger
 
 def _parse_response(response: str, candidate_answer: str, question: str, logger: logging.Logger) -> int:
-    """解析模型的响应并判断是否为'yes'或'no'的回答。"""
     patterns = [
         r".*['\"]?(yes|no)\.?['\"]?[.!]?$",
         r".*I can answer\s+['\"]?(yes|no)['\"]?[.!]?",
@@ -75,7 +71,6 @@ def _parse_response(response: str, candidate_answer: str, question: str, logger:
     return int(acceptable == "Yes")
 
 def load_data(answer_txt, prediction_txt, prompt_txt):
-    """加载并返回数据和提示模板。"""
     with open(answer_txt, 'r') as f:
         answer_data = f.readlines()
 
@@ -88,7 +83,6 @@ def load_data(answer_txt, prediction_txt, prompt_txt):
     return answer_data, prediction_data, prompt_template
 
 def evaluate_model(llm_base, answer_data, prediction_data, prompt_template, output_file, json_file, logger: logging.Logger):
-    """评估模型并将结果写入文件。"""
     record = []
     count = 0
 
@@ -134,7 +128,6 @@ def evaluate_model(llm_base, answer_data, prediction_data, prompt_template, outp
     return accuracy, count
 
 def main(args):
-    # 设置日志文件的路径
     os.makedirs(args.base_out_path, exist_ok=True)
     
     logger = setup_logger(os.path.join(args.base_out_path, 'evaluation.log'))
