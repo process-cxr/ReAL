@@ -1,10 +1,8 @@
-#%%
 from wepyserini.retriever_utils import load_passages, validate, save_results
 import pickle
 import os
 import csv 
 
-#%%
 
 def load_data_with_pickle(file_path):
     with open(file_path, 'rb') as f:
@@ -38,7 +36,7 @@ def process_and_save_retrieval_results(top_docs, dataset_name, questions, questi
     
     return questions_doc_hits
 
-#%%
+
 if __name__=='__main__':
     
     dataset_name = 'nq'
@@ -61,8 +59,6 @@ if __name__=='__main__':
     update_top_docs_list_pkl_path = 'temp_pkl/results/update_top_docs_list.pkl'
     
     update_top_docs_list = load_data_with_pickle(update_top_docs_list_pkl_path)
-
-
     update_top_docs_list = zip(*update_top_docs_list)
     for path, docs in zip(update_output_dir, update_top_docs_list):
         os.makedirs(path, exist_ok=True)

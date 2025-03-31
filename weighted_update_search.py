@@ -1,4 +1,3 @@
-#%%
 from weightedsearcher.weightedseacher import WeightedSearcherWrapper
 from weightedsearcher.classifier_crossencoder import Classifier
 from weightedsearcher.weight_optimization_rank_and_contrast import DistributionForUpdate
@@ -8,7 +7,7 @@ import tqdm
 import pickle
 import logging
 import json
-#%%
+
 
 def weight_optimize(classifier_res, vec_dict, bm25_res, lr, max_iterations, top_num, bottom_num, mask):
     rank_loss = DistributionForUpdate(classifier_res, vec_dict,bm25_res,lr, max_iterations,top_num=top_num,bottom_num=bottom_num,mask=mask) 
@@ -43,8 +42,6 @@ def setup_logger(log_path):
     return logger
 
 
-
-#%%
 if __name__ == "__main__":
     log_path = 'log/record.log'
     logger = setup_logger(log_path)
@@ -82,7 +79,6 @@ if __name__ == "__main__":
     cross_classifier = Classifier(model_path,device)
     for idx, question in tqdm.tqdm(enumerate(questions,1)):
         searcher = WeightedSearcherWrapper(index_dir)
-        # 首次进行BM25索引
         bm25_results, token_vec, java_bm25_results = searcher.search(question, top_n)
         logger.info(f"""token_vec_length of question {idx}: {len(token_vec)}""")
         if use_token_score_cache:
@@ -112,7 +108,6 @@ if __name__ == "__main__":
         for lr in lr_list:
             top_num = 10
             bottom_num = 10
-            # 权重进行更新
             mask = len([item for item in sorted_ranked_docs if "yes" in item["judgment"].lower()])
             new_vec_dict, log_list = weight_optimize(sorted_ranked_docs, token_vec, token_scores_results, lr, max_iterations, top_num, bottom_num, mask)
             idx_weight_dict[str(lr)] = new_vec_dict
@@ -136,6 +131,5 @@ if __name__ == "__main__":
     os.makedirs(output_pkl_path, exist_ok=True)
     save_data_with_pickle(update_top_docs_list, os.path.join(output_pkl_path,'update_top_docs_list.pkl'))
     save_data_with_pickle(update_weight_dict, os.path.join(output_pkl_path,'update_weight_dict.pkl'))
-
     logger.info("First Retrieval and Updated Retrieval Completed!")
 
