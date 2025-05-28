@@ -1,31 +1,31 @@
 import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from torch.nn.functional import softmax
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
-class biClassifier:
-    def __init__(self, model_path, device):
+class BiEncoderRanker:
+    def __init__(self, model_path: str, device: str = 'cuda'):
         self.device = device
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_path).to(self.device)
-        self.model.eval()
+        self.model = SentenceTransformer(model_path, device=device)
 
     def score_documents(self, query: str, doc_dicts: list) -> list:
-        pairs = [(query, doc['text']) for doc in doc_dicts]
-        inputs = self.tokenizer(pairs, padding=True, truncation=True, return_tensors='pt', max_length=512).to(self.device)
+        # 编码 query 和所有文档
+        query_embedding = self.model.encode(query, normalize_embeddings=True)
+        doc_texts = [doc['text'] for doc in doc_dicts]
+        doc_embeddings = self.model.encode(doc_texts, normalize_embeddings=True)
 
-        with torch.no_grad():
-            logits = self.model(**inputs).logits.view(-1, ).float()
-        scores_tensor = logits.to(self.device)
-        scores_softmax = softmax(scores_tensor, dim=0).cpu().numpy()
+        # 相似度计算（归一化后的点积 = 余弦相似度）
+        similarities = np.dot(doc_embeddings, query_embedding)
+
+        # 整理输出
         re_doc_dicts = []
-        for doc_dict, score, softmax_score in zip(doc_dicts, scores_tensor.cpu().numpy(), scores_softmax):
-            re_doc_dict = {
+        for doc_dict, score in zip(doc_dicts, similarities):
+            re_doc_dicts.append({
                 'id': doc_dict['id'],
-                'ranker_score': score,
+                'ranker_score': float(score),
                 'bm25_score': doc_dict.get('doc_score', 0)
-            }
-            re_doc_dicts.append(re_doc_dict)
+            })
 
+        # 按 ranker_score 排序
         re = sorted(re_doc_dicts, key=lambda x: x['ranker_score'], reverse=True)
         return re
 
@@ -36,6 +36,7 @@ class biClassifier:
 
         relevant_sorted = sorted(relevant, key=lambda x: x['bm25_score'], reverse=True)
         non_relevant_sorted = sorted(non_relevant, key=lambda x: x['bm25_score'], reverse=True)
+
         relevant_doc = [
             {
                 "id": item['id'],
@@ -61,4 +62,4 @@ class biClassifier:
     def close(self):
         if self.device == 'cuda':
             torch.cuda.empty_cache()
-            print("Cleared CUDA cache")
+            print("Cleared CUDA cache.")
